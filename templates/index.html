@@ -1,0 +1,683 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AcneMap AI</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        [hidden] {
+            display: none !important;
+        }
+
+        .photo-options {
+            box-sizing: border-box;
+            width: min(100% - 32px, 750px);
+            margin: 30px auto;
+            padding: 32px;
+            background: #fff;
+            border: 1px solid #dce6dd;
+            border-radius: 22px;
+            box-shadow: 0 12px 36px rgba(35, 70, 48, .07);
+        }
+
+        .photo-options h2 {
+            margin-top: 0;
+            color: #263d30;
+        }
+
+        .section-description,
+        .camera-message,
+        .file-name {
+            color: #718078;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .option-buttons {
+            display: block;
+            margin: 24px 0;
+        }
+
+        .option-button {
+            display: flex;
+            width: 100%;
+            min-height: 65px;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 14px;
+            border: 1px solid #356b4a;
+            border-radius: 14px;
+            background: #e6eee2;
+            color: #28543b;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .option-icon {
+            font-size: 25px;
+        }
+
+        .upload-area {
+            display: flex;
+            min-height: 140px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+            border: 2px dashed #dce6dd;
+            border-radius: 14px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .upload-symbol {
+            color: #356b4a;
+            font-size: 35px;
+        }
+
+        .upload-hint {
+            color: #718078;
+            font-size: 13px;
+        }
+
+        .camera-frame {
+            display: flex;
+            min-height: 230px;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #f1f4ef;
+            border: 1px dashed #dce6dd;
+            border-radius: 14px;
+        }
+
+        #cameraVideo,
+        #cameraPreview,
+        #uploadPreview {
+            display: block;
+            width: 100%;
+            max-height: 430px;
+            object-fit: contain;
+        }
+
+        .camera-placeholder {
+            padding: 30px 15px;
+            color: #718078;
+            text-align: center;
+            line-height: 1.8;
+        }
+
+        .camera-placeholder span {
+            display: block;
+            color: #356b4a;
+            font-size: 42px;
+        }
+
+        .camera-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .secondary-button {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px;
+            border: 1px solid #356b4a;
+            border-radius: 10px;
+            background: #edf4ec;
+            color: #28543b;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .primary-button {
+            width: 100%;
+            margin-top: 22px;
+            padding: 15px;
+            border: 0;
+            border-radius: 12px;
+            background: #356b4a;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .primary-button:disabled,
+        .secondary-button:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        .preview-panel {
+            margin-top: 20px;
+        }
+
+        .preview-panel img {
+            border-radius: 12px;
+            background: #f1f4ef;
+        }
+
+        .privacy-note {
+            max-width: 650px;
+            margin: 20px auto;
+            color: #718078;
+            font-size: 12px;
+            line-height: 1.8;
+            text-align: center;
+        }
+
+        .error-message {
+            margin: 18px 0;
+            padding: 12px;
+            border-radius: 10px;
+            background: #fff0ed;
+            color: #a43d2b;
+        }
+
+        @media (max-width: 520px) {
+            .photo-options {
+                padding: 20px;
+            }
+
+            .camera-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body class="app-body">
+    {% include "_sidebar.html" %}
+
+    <main class="hero">
+        <p class="eyebrow">AI-POWERED SKIN ANALYSIS</p>
+
+        <h1>
+            Kenali kulitmu,<br>
+            <span>rawat dengan tepat.</span>
+        </h1>
+
+        <p class="description">
+            Pilih foto dari perangkatmu atau ambil foto langsung
+            menggunakan kamera untuk memulai analisis AcneMap AI.
+        </p>
+
+        <section class="dashboard-overview">
+            <article class="dashboard-welcome">
+                <span class="dashboard-kicker">YOUR SKIN, YOUR INSIGHT</span>
+                <h2>Kenali kondisi kulit melalui analisis berbasis AI.</h2>
+                <p>Unggah foto wajah untuk melihat kandidat lesi, persebaran zona, dan klasifikasi tingkat keparahan.</p>
+            </article>
+            <article class="dashboard-metric">
+                <span>Total analisis</span>
+                <strong>{{ total_analyses|default(0) }}</strong>
+                <small>Riwayat tersimpan</small>
+            </article>
+            <article class="dashboard-metric">
+                <span>Analisis terakhir</span>
+                <strong>{% if latest_analysis %}#{{ latest_analysis['id'] }}{% else %}—{% endif %}</strong>
+                <small>{% if latest_analysis %}{{ latest_analysis['created_at'] }}{% else %}Belum ada pemindaian{% endif %}</small>
+            </article>
+        </section>
+
+        {% if error %}
+        <div class="error-message">{{ error }}</div>
+        {% endif %}
+
+        
+
+<section class="photo-options">
+    <h2>Masukkan Foto Wajah</h2>
+
+    <p class="section-description">
+        Unggah tiga sudut wajah atau ambil foto langsung menggunakan kamera.
+    </p>
+
+    <div class="option-buttons">
+        <button type="button" id="cameraOption" class="option-button">
+            <span class="option-icon">◎</span>
+            <span id="cameraOptionText">Ambil Foto Langsung</span>
+        </button>
+    </div>
+
+    <form id="photoForm"
+          method="POST"
+          action="{{ url_for('index') }}"
+          enctype="multipart/form-data">
+
+        <!-- UPLOAD GALERI -->
+        <div id="uploadPanel">
+
+            <div class="three-photo-grid">
+
+                <div class="photo-upload-card">
+                    <h3>01. Foto Depan</h3>
+                    <p>Hadapkan wajah lurus ke kamera.</p>
+
+                    <input type="file"
+                           id="photo_front"
+                           name="photo_front"
+                           accept="image/jpeg,image/png">
+
+                    <img id="preview_front"
+                         class="three-preview"
+                         alt="Preview foto depan"
+                         hidden>
+                </div>
+
+                <div class="photo-upload-card">
+                    <h3>02. Foto Samping Kiri</h3>
+                    <p>Putar wajah ke arah kiri.</p>
+
+                    <input type="file"
+                           id="photo_left"
+                           name="photo_left"
+                           accept="image/jpeg,image/png">
+
+                    <img id="preview_left"
+                         class="three-preview"
+                         alt="Preview foto kiri"
+                         hidden>
+                </div>
+
+                <div class="photo-upload-card">
+                    <h3>03. Foto Samping Kanan</h3>
+                    <p>Putar wajah ke arah kanan.</p>
+
+                    <input type="file"
+                           id="photo_right"
+                           name="photo_right"
+                           accept="image/jpeg,image/png">
+
+                    <img id="preview_right"
+                         class="three-preview"
+                         alt="Preview foto kanan"
+                         hidden>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- KAMERA -->
+        <div id="cameraPanel" hidden>
+
+            <h3 id="cameraStepTitle">
+                Foto 1 dari 3: Wajah Depan
+            </h3>
+
+            <div class="camera-frame">
+
+                <video id="cameraVideo"
+                       autoplay
+                       playsinline
+                       muted
+                       hidden></video>
+
+                <canvas id="cameraCanvas" hidden></canvas>
+
+                <img id="cameraPreview"
+                     alt="Preview hasil kamera"
+                     hidden>
+
+                <div id="cameraPlaceholder"
+                     class="camera-placeholder">
+                    <span>◎</span>
+                    <strong>Kamera belum dibuka</strong>
+                    <p>Tekan Buka Kamera untuk memulai.</p>
+                </div>
+
+            </div>
+
+            <p id="cameraMessage"
+               class="camera-message"
+               aria-live="polite">
+                Siapkan kamera untuk mengambil foto wajah.
+            </p>
+
+            <div class="camera-buttons">
+
+                <button type="button"
+                        id="startCamera"
+                        class="secondary-button">
+                    Buka Kamera
+                </button>
+
+                <button type="button"
+                        id="takePhoto"
+                        class="secondary-button"
+                        disabled>
+                    Ambil Foto
+                </button>
+
+                <button type="button"
+                        id="retakePhoto"
+                        class="secondary-button"
+                        hidden>
+                    Ulangi Foto Terakhir
+                </button>
+
+            </div>
+
+            <!-- DATA FOTO KAMERA -->
+            <input type="hidden"
+                   id="camera_photo_front"
+                   name="camera_photo_front">
+
+            <input type="hidden"
+                   id="camera_photo_left"
+                   name="camera_photo_left">
+
+            <input type="hidden"
+                   id="camera_photo_right"
+                   name="camera_photo_right">
+
+        </div>
+
+        <button type="submit"
+                id="analyzeButton"
+                class="primary-button"
+                disabled>
+            Analisis 3 Foto
+        </button>
+
+    </form>
+</section>
+
+        <p class="privacy-note">
+            Gunakan foto milik sendiri atau foto yang penggunaannya
+            telah mendapat izin. Hasil analisis bersifat edukatif,
+            bukan pengganti diagnosis dokter kulit.
+        </p>
+    </main>
+
+    <footer>
+        <p>AcneMap AI · Educational Skin Analysis</p>
+    </footer>
+
+ <script>
+const form = document.getElementById("photoForm");
+
+const cameraOption = document.getElementById("cameraOption");
+const uploadPanel = document.getElementById("uploadPanel");
+const cameraPanel = document.getElementById("cameraPanel");
+
+const analyzeButton = document.getElementById("analyzeButton");
+
+const video = document.getElementById("cameraVideo");
+const canvas = document.getElementById("cameraCanvas");
+const cameraPreview = document.getElementById("cameraPreview");
+
+const cameraMessage = document.getElementById("cameraMessage");
+const cameraStepTitle = document.getElementById("cameraStepTitle");
+
+const startCamera = document.getElementById("startCamera");
+const takePhoto = document.getElementById("takePhoto");
+const retakePhoto = document.getElementById("retakePhoto");
+
+const slots = [
+    {
+        label: "Wajah Depan",
+        file: document.getElementById("photo_front"),
+        hidden: document.getElementById("camera_photo_front"),
+        preview: document.getElementById("preview_front")
+    },
+    {
+        label: "Samping Kiri",
+        file: document.getElementById("photo_left"),
+        hidden: document.getElementById("camera_photo_left"),
+        preview: document.getElementById("preview_left")
+    },
+    {
+        label: "Samping Kanan",
+        file: document.getElementById("photo_right"),
+        hidden: document.getElementById("camera_photo_right"),
+        preview: document.getElementById("preview_right")
+    }
+];
+
+let stream = null;
+let currentIndex = 0;
+let cameraMode = false;
+
+function stopCamera() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+    }
+
+    video.srcObject = null;
+}
+
+function updateAnalyzeButton() {
+    const complete = slots.every(slot =>
+        slot.hidden.value || slot.file.files.length > 0
+    );
+
+    analyzeButton.disabled = !complete;
+}
+
+function clearSlot(index) {
+    const slot = slots[index];
+
+    slot.hidden.value = "";
+    slot.file.value = "";
+    slot.preview.src = "";
+    slot.preview.hidden = true;
+}
+
+slots.forEach((slot, index) => {
+    slot.file.addEventListener("change", () => {
+        const file = slot.file.files[0];
+
+        slot.preview.hidden = true;
+
+        if (!file) {
+            updateAnalyzeButton();
+            return;
+        }
+
+        if (!["image/jpeg", "image/png"].includes(file.type)) {
+            alert("Gunakan foto JPG, JPEG, atau PNG.");
+            slot.file.value = "";
+            updateAnalyzeButton();
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            alert("Ukuran setiap foto maksimal 5 MB.");
+            slot.file.value = "";
+            updateAnalyzeButton();
+            return;
+        }
+
+        slot.hidden.value = "";
+
+        slot.preview.src = URL.createObjectURL(file);
+        slot.preview.hidden = false;
+
+        updateAnalyzeButton();
+    });
+});
+
+cameraOption.addEventListener("click", () => {
+    cameraMode = !cameraMode;
+
+    cameraPanel.hidden = !cameraMode;
+    uploadPanel.hidden = cameraMode;
+
+    cameraOption.querySelector("span:last-child").textContent =
+        cameraMode ? "Kembali ke Upload Foto" : "Ambil Foto Langsung";
+
+    if (!cameraMode) {
+        stopCamera();
+    } else {
+        currentIndex = 0;
+
+        cameraStepTitle.textContent =
+            "Foto 1 dari 3: Wajah Depan";
+
+        cameraMessage.textContent =
+            "Tekan Buka Kamera untuk memulai.";
+
+        startCamera.hidden = false;
+        startCamera.textContent = "Buka Kamera";
+        takePhoto.disabled = true;
+        retakePhoto.hidden = true;
+    }
+});
+
+async function openCamera() {
+    if (currentIndex >= 3) {
+        cameraMessage.textContent =
+            "Ketiga foto sudah berhasil diambil.";
+        return;
+    }
+
+    stopCamera();
+
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "user" },
+            audio: false
+        });
+
+        video.srcObject = stream;
+        video.hidden = false;
+        cameraPreview.hidden = true;
+
+        await video.play();
+
+        cameraStepTitle.textContent =
+            `Foto ${currentIndex + 1} dari 3: ${slots[currentIndex].label}`;
+
+        takePhoto.disabled = false;
+        startCamera.hidden = true;
+
+        cameraMessage.textContent =
+            "Posisikan wajah sesuai petunjuk, lalu ambil foto.";
+
+    } catch (error) {
+        cameraMessage.textContent =
+            "Kamera gagal dibuka. Periksa izin kamera browser.";
+        stopCamera();
+    }
+}
+
+startCamera.addEventListener("click", openCamera);
+
+takePhoto.addEventListener("click", () => {
+    if (!stream || !video.videoWidth) {
+        cameraMessage.textContent =
+            "Tunggu sampai kamera siap.";
+        return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const context = canvas.getContext("2d");
+
+    context.drawImage(
+        video,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    const imageData = canvas.toDataURL("image/jpeg", 0.9);
+
+    const slot = slots[currentIndex];
+
+    slot.hidden.value = imageData;
+    slot.file.value = "";
+
+    slot.preview.src = imageData;
+    slot.preview.hidden = false;
+
+    cameraPreview.src = imageData;
+    cameraPreview.hidden = false;
+    video.hidden = true;
+
+    stopCamera();
+
+    currentIndex++;
+
+    takePhoto.disabled = true;
+    retakePhoto.hidden = false;
+
+    if (currentIndex < 3) {
+        cameraStepTitle.textContent =
+            `Foto ${currentIndex + 1} dari 3: ${slots[currentIndex].label}`;
+
+        startCamera.hidden = false;
+        startCamera.textContent = "Ambil Foto Berikutnya";
+
+        cameraMessage.textContent =
+            "Foto berhasil disimpan. Lanjutkan ke sudut wajah berikutnya.";
+    } else {
+        cameraStepTitle.textContent = "Ketiga Foto Berhasil Diambil";
+
+        startCamera.hidden = true;
+
+        cameraMessage.textContent =
+            "Semua foto sudah tersedia. Periksa preview sebelum analisis.";
+    }
+
+    updateAnalyzeButton();
+});
+
+retakePhoto.addEventListener("click", () => {
+    if (currentIndex === 0) return;
+
+    currentIndex--;
+
+    clearSlot(currentIndex);
+
+    cameraStepTitle.textContent =
+        `Ulangi Foto ${currentIndex + 1}: ${slots[currentIndex].label}`;
+
+    cameraPreview.hidden = true;
+    retakePhoto.hidden = true;
+    startCamera.hidden = false;
+    startCamera.textContent = "Buka Kamera";
+
+    cameraMessage.textContent =
+        "Ambil ulang foto untuk sudut ini.";
+
+    updateAnalyzeButton();
+});
+
+form.addEventListener("submit", event => {
+    const complete = slots.every(slot =>
+        slot.hidden.value || slot.file.files.length > 0
+    );
+
+    if (!complete) {
+        event.preventDefault();
+        alert("Lengkapi ketiga foto wajah terlebih dahulu.");
+        return;
+    }
+
+    stopCamera();
+
+    analyzeButton.disabled = true;
+    analyzeButton.textContent = "Memproses 3 Foto...";
+});
+
+window.addEventListener("pagehide", stopCamera);
+ </script>   
+
+</body>
+</html>

@@ -1,0 +1,378 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Profil Kulit | AcneMap AI</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        body {
+            background: #f7faf7;
+        }
+
+        .verification-container {
+            max-width: 720px;
+            margin: 60px auto;
+            padding: 24px;
+        }
+
+        .verification-card {
+            background: white;
+            border: 1px solid #e0e9df;
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 10px 35px rgba(40, 70, 45, .06);
+        }
+
+        .step-label {
+            color: #718579;
+            font-size: 12px;
+            letter-spacing: 2px;
+            font-weight: 700;
+        }
+
+        .progress-track {
+            height: 7px;
+            background: #e8eee8;
+            border-radius: 20px;
+            margin: 18px 0 30px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 25%;
+            background: #4d8060;
+            transition: width .3s ease;
+        }
+
+        .question-title {
+            color: #344b3b;
+            font-size: 25px;
+            margin-bottom: 12px;
+        }
+
+        .question-description {
+            color: #718579;
+            line-height: 1.7;
+            margin-bottom: 25px;
+        }
+
+        .answer-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .answer-option {
+            padding: 17px;
+            border: 1px solid #e0e9df;
+            border-radius: 12px;
+            cursor: pointer;
+            color: #52675a;
+            transition: .2s;
+        }
+
+        .answer-option:hover {
+            border-color: #71977a;
+            background: #f7faf7;
+        }
+
+        .answer-option.selected {
+            border: 2px solid #4d8060;
+            background: #edf5ee;
+            color: #344b3b;
+            font-weight: 700;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        .navigation button {
+            padding: 13px 24px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        #nextButton {
+            background: #416e50;
+            color: white;
+            margin-left: auto;
+        }
+
+        #backButton {
+            background: #edf2ed;
+            color: #52675a;
+        }
+
+        button:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+        }
+
+        .question-panel {
+            animation: appear .25s ease;
+        }
+
+        @keyframes appear {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-message {
+            color: #c34242;
+            margin-top: 15px;
+        }
+
+        @media(max-width: 600px) {
+            .verification-container {
+                margin: 20px auto;
+                padding: 14px;
+            }
+
+            .verification-card {
+                padding: 23px;
+            }
+
+            .question-title {
+                font-size: 21px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<main class="verification-container">
+
+    <section class="verification-card">
+
+        <span class="step-label">
+            ACNEMAP AI · SKIN PROFILE
+        </span>
+
+        <h1>Kenali Kondisi Kulitmu</h1>
+
+        <p class="question-description">
+            Jawab beberapa pertanyaan berikut agar hasil analisis
+            dan rekomendasi perawatan dapat disesuaikan dengan
+            kondisi serta kebutuhan kulitmu.
+        </p>
+
+        <div class="progress-track">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="step-label" id="questionCounter">
+            PERTANYAAN 1 DARI 4
+        </div>
+
+        <div id="questionPanel" class="question-panel">
+
+            <h2 class="question-title" id="questionTitle"></h2>
+
+            <p class="question-description"
+               id="questionDescription"></p>
+
+            <div class="answer-list" id="answerList"></div>
+
+        </div>
+
+        <p class="error-message" id="errorMessage"></p>
+
+        <div class="navigation">
+
+            <button type="button" id="backButton" disabled>
+                Kembali
+            </button>
+
+            <button type="button" id="nextButton" disabled>
+                Lanjut
+            </button>
+
+        </div>
+
+    </section>
+
+</main>
+
+<script>
+const questions = [
+    {
+        field: "skin_type",
+        title: "Bagaimana tipe kulitmu?",
+        description: "Pilih kondisi kulit yang paling mendekati.",
+        answers: [
+            "Berminyak",
+            "Kering",
+            "Normal",
+            "Kombinasi",
+            "Tidak yakin"
+        ]
+    },
+    {
+        field: "acne_frequency",
+        title: "Seberapa sering jerawat muncul?",
+        description: "Pilih berdasarkan kondisi kulitmu belakangan ini.",
+        answers: [
+            "Jarang",
+            "Sesekali",
+            "Sering",
+            "Hampir selalu"
+        ]
+    },
+    {
+        field: "sensitivity",
+        title: "Apakah kulitmu sensitif?",
+        description: "Misalnya mudah merah, perih, gatal, atau iritasi.",
+        answers: [
+            "Ya, kulit saya sensitif",
+            "Tidak",
+            "Tidak yakin"
+        ]
+    },
+    {
+        field: "main_concern",
+        title: "Apa masalah kulit yang paling ingin kamu atasi?",
+        description: "Pilih masalah yang menjadi prioritasmu.",
+        answers: [
+            "Jerawat aktif",
+            "Bekas jerawat",
+            "Kemerahan dan iritasi",
+            "Kulit berminyak",
+            "Tekstur kulit tidak merata",
+            "Beberapa masalah sekaligus"
+        ]
+    }
+];
+
+let currentQuestion = 0;
+let answers = {};
+
+const questionTitle = document.getElementById("questionTitle");
+const questionDescription = document.getElementById("questionDescription");
+const answerList = document.getElementById("answerList");
+const questionCounter = document.getElementById("questionCounter");
+const progressBar = document.getElementById("progressBar");
+const nextButton = document.getElementById("nextButton");
+const backButton = document.getElementById("backButton");
+const errorMessage = document.getElementById("errorMessage");
+
+function renderQuestion() {
+    const question = questions[currentQuestion];
+
+    questionTitle.textContent = question.title;
+    questionDescription.textContent = question.description;
+
+    questionCounter.textContent =
+        `PERTANYAAN ${currentQuestion + 1} DARI ${questions.length}`;
+
+    progressBar.style.width =
+        `${((currentQuestion + 1) / questions.length) * 100}%`;
+
+    answerList.innerHTML = "";
+
+    question.answers.forEach(answer => {
+        const option = document.createElement("button");
+
+        option.type = "button";
+        option.className = "answer-option";
+        option.textContent = answer;
+
+        if (answers[question.field] === answer) {
+            option.classList.add("selected");
+        }
+
+        option.addEventListener("click", () => {
+            answers[question.field] = answer;
+
+            answerList.querySelectorAll(".answer-option")
+                .forEach(item => item.classList.remove("selected"));
+
+            option.classList.add("selected");
+            nextButton.disabled = false;
+        });
+
+        answerList.appendChild(option);
+    });
+
+    nextButton.disabled = !answers[question.field];
+    backButton.disabled = currentQuestion === 0;
+
+    nextButton.textContent =
+        currentQuestion === questions.length - 1
+            ? "Mulai Analisis"
+            : "Lanjut";
+
+    errorMessage.textContent = "";
+}
+
+backButton.addEventListener("click", () => {
+    if (currentQuestion > 0) {
+        currentQuestion--;
+        renderQuestion();
+    }
+});
+
+nextButton.addEventListener("click", async () => {
+
+    if (!answers[questions[currentQuestion].field]) {
+        return;
+    }
+
+    if (currentQuestion < questions.length - 1) {
+        currentQuestion++;
+        renderQuestion();
+        return;
+    }
+
+    nextButton.disabled = true;
+    nextButton.textContent = "Menyimpan...";
+
+    try {
+        const response = await fetch(
+            "{{ url_for('verification', analysis_id=analysis['id']) }}",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(answers)
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || result.status !== "success") {
+            throw new Error(result.message || "Gagal menyimpan jawaban.");
+        }
+
+        window.location.href = result.redirect;
+
+    } catch (error) {
+        errorMessage.textContent = error.message;
+        nextButton.disabled = false;
+        nextButton.textContent = "Coba Lagi";
+    }
+});
+
+renderQuestion();
+</script>
+
+</body>
+</html>

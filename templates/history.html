@@ -1,0 +1,145 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Riwayat Analisis | AcneMap AI</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .history-page {
+            width: min(100% - 32px, 1000px);
+            margin: 50px auto;
+        }
+
+        .history-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .history-card {
+            padding: 18px;
+            background: #fff;
+            border: 1px solid #dce6dd;
+            border-radius: 16px;
+        }
+
+        .history-photo {
+            display: block;
+            width: 100%;
+            height: 230px;
+            object-fit: cover;
+            border-radius: 12px;
+            background: #f1f4ef;
+        }
+
+        .history-date {
+            color: #718078;
+            font-size: 13px;
+        }
+
+        .history-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .history-actions a,
+        .delete-button {
+            display: inline-block;
+            padding: 10px 14px;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .history-actions a {
+            background: #e8f0e6;
+            color: #28543b;
+        }
+
+        .delete-button {
+            border: 1px solid #e8c8c2;
+            background: #fff0ed;
+            color: #a43d2b;
+        }
+
+        .empty-history {
+            margin-top: 25px;
+            padding: 35px 20px;
+            background: #fff;
+            border: 1px dashed #dce6dd;
+            border-radius: 14px;
+            color: #718078;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body class="app-body">
+    {% include "_sidebar.html" %}
+
+    <main class="history-page">
+        <p class="eyebrow">YOUR ANALYSIS HISTORY</p>
+        <h1>Riwayat <span>Analisis</span></h1>
+
+        <p class="description">
+            Foto yang pernah kamu kirim tersimpan di sini.
+            Kamu dapat melihat kembali atau menghapus riwayat.
+        </p>
+
+        {% if analyses %}
+        <section class="history-list">
+            {% for item in analyses %}
+            <article class="history-card">
+                <img
+                    class="history-photo"
+                    src="{{ url_for('static', filename='uploads/' ~ item['filename']) }}"
+                    alt="Foto analisis {{ item['id'] }}"
+                    loading="lazy"
+                >
+
+                <h2>Analisis #{{ item['id'] }}</h2>
+                <p class="history-date">{{ item['created_at'] }}</p>
+
+                <div class="history-actions">
+                    <a href="{{ url_for('result', analysis_id=item['id']) }}">
+                        Lihat Hasil
+                    </a>
+
+                    <form
+                        method="POST"
+                        action="{{ url_for('delete_analysis', analysis_id=item['id']) }}"
+                        onsubmit="return confirm('Yakin ingin menghapus riwayat ini?');"
+                    >
+                        <button class="delete-button" type="submit">
+                            Hapus
+                        </button>
+                    </form>
+                </div>
+            </article>
+            {% endfor %}
+        </section>
+        {% else %}
+        <div class="empty-history">
+            <h2>Belum ada riwayat</h2>
+            <p>Foto yang kamu analisis nanti akan muncul di sini.</p>
+            <a href="/">Mulai Analisis</a>
+        </div>
+        {% endif %}
+    </main>
+
+    <footer>
+        <p>AcneMap AI · Educational Skin Analysis</p>
+        <p>Bukan pengganti diagnosis dokter kulit.</p>
+    </footer>
+</body>
+</html>

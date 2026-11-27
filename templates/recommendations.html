@@ -1,0 +1,303 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Skincare Insight | AcneMap AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="app-body">
+
+{% include "_sidebar.html" %}
+
+<main class="page-shell">
+
+    <!-- HEADER -->
+    <header class="page-header">
+        <div>
+            <p class="eyebrow">PERSONALIZED SKINCARE INSIGHT</p>
+            <h1>Rekomendasi <span>Skincare</span></h1>
+            <p class="description">
+                Edukasi perawatan berdasarkan hasil analisis wajah AcneMap AI.
+            </p>
+        </div>
+
+        <a class="outline-action" href="/">＋ Analisis baru</a>
+    </header>
+
+
+    <!-- HASIL KLASIFIKASI -->
+    <section class="insight-banner">
+        <div class="insight-icon">✧</div>
+
+        <div>
+            <span class="mini-label">HASIL KLASIFIKASI CNN</span>
+            <h2>{{ guidance.title }}</h2>
+            <p>{{ guidance.summary }}</p>
+        </div>
+
+        <div class="severity-pill">
+            {{ guidance.severity_label }}
+        </div>
+    </section>
+
+
+    <!-- STATISTIK -->
+    <section class="stats-row">
+
+        <article class="stat-card">
+            <span class="stat-label">Kandidat lesi</span>
+            <strong>
+                {{ guidance.total_lesions if guidance.total_lesions is not none else '—' }}
+            </strong>
+            <small>Teridentifikasi pada foto</small>
+        </article>
+
+        <article class="stat-card">
+            <span class="stat-label">Zona dominan</span>
+            <strong class="stat-zone">
+                {{ guidance.dominant_zone }}
+            </strong>
+            <small>Berdasarkan pemetaan zona</small>
+        </article>
+
+        <article class="stat-card">
+            <span class="stat-label">Kategori analisis</span>
+            <strong class="stat-zone">
+                {{ guidance.severity_label }}
+            </strong>
+            <small>Prediksi model CNN</small>
+        </article>
+
+    </section>
+
+
+    <!-- ANALISIS ZONA WAJAH -->
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">FACIAL ZONE ANALYSIS</p>
+            <h2>Analisis Persebaran Jerawat</h2>
+            <p class="description">
+                Persebaran kandidat lesi dan kemungkinan faktor
+                yang dapat berkontribusi pada setiap zona wajah.
+            </p>
+        </div>
+    </div>
+
+
+    {% if guidance.has_zone_data %}
+
+    <section class="ingredient-grid">
+
+        {% for zone in guidance.zone_analysis %}
+
+        <article class="ingredient-card modern-ingredient">
+
+            <span class="ingredient-tag">
+                {{ zone.label }}
+            </span>
+
+            <h2>{{ zone.count }} Kandidat Lesi</h2>
+
+            <p>
+                Zona ini memiliki {{ zone.count }}
+                kandidat lesi yang terdeteksi oleh sistem.
+            </p>
+
+            <div class="caution">
+                <strong>Kemungkinan faktor yang berkontribusi</strong>
+
+                <p>{{ zone.title }}</p>
+
+                <ul>
+                    {% for factor in zone.factors %}
+                    <li>{{ factor }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+        </article>
+
+        {% endfor %}
+
+    </section>
+
+    {% else %}
+
+    <section class="result-card distribution-card">
+        <h2>Belum ada persebaran lesi yang dapat ditampilkan</h2>
+        <p>
+            Sistem belum memperoleh data zona wajah yang memiliki
+            kandidat lesi pada hasil analisis ini.
+        </p>
+    </section>
+
+    {% endif %}
+
+
+    <!-- RINGKASAN DISTRIBUSI -->
+    <section class="result-card distribution-card">
+
+        <p class="eyebrow">DISTRIBUTION SUMMARY</p>
+
+        <h2>Ringkasan Persebaran</h2>
+
+        <p>{{ guidance.distribution_note }}</p>
+
+        {% if analysis %}
+        <small>
+            Terhubung dengan analisis #{{ analysis['id'] }}
+            · {{ analysis['created_at'] }}
+        </small>
+        {% else %}
+        <small>
+            Belum ada riwayat analisis yang dapat dihubungkan.
+        </small>
+        {% endif %}
+
+    </section>
+
+
+        <!-- PERSONALIZED SKIN PROFILE -->
+    <section class="result-card profile-card">
+
+        <p class="eyebrow">YOUR SKIN PROFILE</p>
+
+        <h2>Profil Kulit Kamu</h2>
+
+        <div class="profile-details">
+
+            <div class="profile-item">
+                <span>Jenis Kulit</span>
+                <strong>
+                    {{ guidance.skin_type or "Belum diisi" }}
+                </strong>
+            </div>
+
+            <div class="profile-item">
+                <span>Masalah Utama</span>
+                <strong>
+                    {{ guidance.main_concern or "Belum diisi" }}
+                </strong>
+            </div>
+
+        </div>
+
+        <div class="personalization-note">
+            <strong>Personalized Insight</strong>
+            <p>
+                {{ guidance.personalization_note }}
+            </p>
+        </div>
+
+    </section>
+
+
+    <!-- REKOMENDASI BAHAN AKTIF -->
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">INGREDIENT GUIDE</p>
+            <h2>Kandungan Skincare yang Dapat Dipelajari</h2>
+            <p class="description">
+                Pilihan kandungan mempertimbangkan hasil klasifikasi
+                CNN dan profil kulit yang kamu isi.
+            </p>
+        </div>
+    </div>
+
+
+    <section class="ingredient-grid">
+
+        {% for item in guidance.ingredients %}
+
+        <article class="ingredient-card modern-ingredient">
+
+            <span class="ingredient-tag">
+    {{ item.tag }}
+</span>
+
+<div class="verification-status">
+    {% if item.verification_status == "Sesuai" %}
+        <span class="status-approved">✓ Sesuai</span>
+    {% elif item.verification_status == "Perlu Perhatian" %}
+        <span class="status-warning">⚠ Perlu Perhatian</span>
+    {% else %}
+        <span class="status-rejected">✕ Tidak Direkomendasikan</span>
+    {% endif %}
+</div>
+
+<h2>{{ item.name }}</h2>
+
+{% if item.verification_notes %}
+    <ul class="verification-notes">
+        {% for note in item.verification_notes %}
+            <li>{{ note }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+            <p>{{ item.why }}</p>
+
+            <div class="caution">
+                <strong>Perlu diperhatikan</strong>
+                <p>{{ item.caution }}</p>
+            </div>
+
+        </article>
+
+        {% endfor %}
+
+    </section>
+
+
+    <!-- RUTINITAS -->
+  {% if guidance.severity == "very_severe" or guidance.severity == "severe" %}
+
+<section class="result-card doctor-consultation">
+
+    <p class="eyebrow">PROFESSIONAL SKINCARE ADVICE</p>
+
+    <h2>Disarankan Konsultasi dengan Dokter Kulit</h2>
+
+    <p>
+        Hasil analisis menunjukkan kategori keparahan
+        jerawat {{ guidance.severity_label }}.
+        Kamu disarankan berkonsultasi dengan dokter
+        spesialis dermatologi, venereologi, dan estetika
+        (Sp.D.V.E.) untuk mendapatkan pemeriksaan dan
+        penanganan yang sesuai.
+    </p>
+
+    <ul>
+        <li>Menentukan penanganan sesuai kondisi kulit.</li>
+        <li>Mengevaluasi kebutuhan terapi jerawat.</li>
+        <li>Mengurangi risiko iritasi akibat penggunaan bahan aktif yang tidak sesuai.</li>
+    </ul>
+
+    <small>
+        Rekomendasi ini merupakan saran edukatif berdasarkan
+        hasil klasifikasi AI, bukan diagnosis medis.
+    </small>
+
+</section>
+
+{% endif %}
+
+    <!-- CATATAN MEDIS -->
+    <p class="medical-note">
+        Catatan: hasil analisis AcneMap AI merupakan edukasi umum,
+        bukan diagnosis atau resep medis. Faktor pada setiap zona
+        merupakan kemungkinan yang tidak dapat dipastikan hanya
+        berdasarkan lokasi lesi. Model tidak mengidentifikasi jenis
+        lesi maupun tipe kulit. Jangan memulai beberapa bahan aktif
+        sekaligus. Untuk jerawat berat, nyeri, berbekas, memburuk,
+        atau tidak membaik, konsultasikan dengan dokter kulit.
+    </p>
+
+
+</main>
+
+</body>
+</html>

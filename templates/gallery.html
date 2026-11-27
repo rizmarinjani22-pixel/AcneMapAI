@@ -1,0 +1,56 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Galeri Foto | AcneMap AI</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="app-body">
+    {% include "_sidebar.html" %}
+
+    <main class="results-page">
+        <p class="eyebrow">SAMPLE IMAGE LIBRARY</p>
+        <h1>Pilih foto <span>contoh.</span></h1>
+        <p class="description">
+            Pilih foto yang tersedia untuk mencoba alur analisis AcneMap AI.
+            Hasil deteksi baru tersedia setelah model CNN diintegrasikan.
+        </p>
+
+        <section class="gallery-grid">
+            {% for item in images %}
+            <article class="result-card gallery-card">
+                <img
+                    src="{{ url_for('static', filename='gallery/' ~ item.filename) }}"
+                    alt="{{ item.title }}"
+                    class="gallery-photo"
+                    loading="lazy"
+                >
+
+                <h2>{{ item.title }}</h2>
+
+                <form method="POST"
+                      action="{{ url_for('analyze_example') }}">
+                    <input type="hidden"
+                           name="example_id"
+                           value="{{ item.id }}">
+                    <button type="submit">Pilih Foto Ini</button>
+                </form>
+            </article>
+            {% endfor %}
+        </section>
+
+        <p class="privacy">
+            Gunakan foto yang memiliki izin penggunaan dan sesuai
+            dengan ketentuan privasi penelitian.
+        </p>
+    </main>
+
+    <footer>
+        <p>AcneMap AI · Educational skin analysis</p>
+        <p>Bukan pengganti diagnosis dokter kulit.</p>
+    </footer>
+</body>
+</html>

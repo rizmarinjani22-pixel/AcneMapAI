@@ -1,0 +1,845 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hasil Analisis | AcneMap AI</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        /* =====================================
+           CNN 1 SEVERITY RESULT
+        ===================================== */
+
+        .severity-card {
+            margin-bottom: 30px;
+        }
+
+        .severity-result {
+            margin-top: 22px;
+            padding: 28px;
+            border-radius: 16px;
+            background: #f7faf7;
+            border: 1px solid #e0e9df;
+            text-align: center;
+        }
+
+        .severity-label {
+            font-size: 12px;
+            letter-spacing: 2px;
+            font-weight: 600;
+            color: #718579;
+            margin-bottom: 12px;
+        }
+
+        .severity-value {
+            font-size: 38px;
+            font-weight: 800;
+            margin: 10px 0;
+            letter-spacing: 1px;
+        }
+
+        .severity-value.mild {
+            color: #27865b;
+        }
+
+        .severity-value.moderate {
+            color: #b18a27;
+        }
+
+        .severity-value.severe {
+            color: #d66b32;
+        }
+
+        .severity-value.very-severe {
+            color: #c34242;
+        }
+
+        .severity-confidence {
+            font-size: 15px;
+            color: #718579;
+            margin-top: 8px;
+        }
+
+        .severity-description {
+            margin-top: 22px;
+            padding: 16px 20px;
+            background: #ffffff;
+            border-radius: 10px;
+            border: 1px solid #e7ede5;
+            color: #52675a;
+            line-height: 1.7;
+            text-align: left;
+        }
+
+        .severity-note {
+            margin-top: 16px;
+            font-size: 12px;
+            line-height: 1.7;
+            color: #87958a;
+            text-align: center;
+        }
+
+        .severity-error {
+            margin-top: 18px;
+            padding: 16px;
+            border-radius: 10px;
+            background: #fff5f2;
+            color: #a64b3c;
+            line-height: 1.6;
+        }
+
+        /* =====================================
+           CNN 2 LESION CLASSIFICATION
+        ===================================== */
+
+        .lesion-detail-card {
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid #e0e9df;
+            border-radius: 12px;
+            background: #ffffff;
+        }
+
+        .lesion-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .lesion-detail-header strong {
+            color: #344b3b;
+            font-size: 15px;
+        }
+
+        .severity-badge {
+            display: inline-block;
+            padding: 7px 13px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .severity-badge.mild {
+            background: #e3f4e9;
+            color: #27865b;
+        }
+
+        .severity-badge.moderate {
+            background: #fff3d5;
+            color: #a77b18;
+        }
+
+        .severity-badge.severe {
+            background: #ffeadf;
+            color: #d66b32;
+        }
+
+        .severity-badge.very-severe {
+            background: #fde5e5;
+            color: #c34242;
+        }
+
+        .severity-badge.unavailable {
+            background: #eeeeee;
+            color: #777777;
+        }
+
+        .lesion-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .lesion-metrics div {
+            padding: 12px;
+            background: #f7faf7;
+            border-radius: 9px;
+        }
+
+        .lesion-metrics span {
+            display: block;
+            font-size: 12px;
+            color: #718579;
+            margin-bottom: 7px;
+        }
+
+        .lesion-metrics strong {
+            font-size: 16px;
+            color: #344b3b;
+        }
+
+        .lesion-note {
+            margin-top: 18px;
+            font-size: 12px;
+            line-height: 1.7;
+            color: #87958a;
+        }
+
+        @media (max-width: 600px) {
+            .lesion-metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .severity-value {
+                font-size: 30px;
+            }
+        }
+    </style>
+</head>
+
+<body class="app-body">
+
+    {% include "_sidebar.html" %}
+
+    <main class="results-page">
+
+        <p class="eyebrow">YOUR SKIN INSIGHT</p>
+
+        <h1>Hasil Analisis <span>Wajah</span></h1>
+
+        <p class="description">
+            Berikut merupakan hasil deteksi lesi jerawat
+            menggunakan teknologi kecerdasan buatan.
+        </p>
+
+        <!-- STATUS ANALISIS -->
+        
+<!-- STATUS ANALISIS -->
+<section class="result-card">
+
+    {% if prediction.status == "success" %}
+
+        <div class="analysis-status">
+            <div class="status-icon">✳</div>
+            <h3>Analisis Berhasil</h3>
+            <p>{{ prediction.message }}</p>
+            <span class="status-badge">Analisis selesai</span>
+        </div>
+
+    {% elif prediction.status == "pending" %}
+
+        <div class="analysis-status">
+            <div class="status-icon">⌛</div>
+            <h3>Menunggu Analisis</h3>
+
+            <p>
+                Foto berhasil disimpan. Tekan tombol di bawah
+                untuk memulai analisis menggunakan CNN1, YOLO, dan CNN2.
+            </p>
+
+            <form
+                method="POST"
+                action="{{ url_for('run_analysis', analysis_id=analysis['id']) }}"
+            >
+                <button type="submit" class="btn-primary">
+                    Mulai Analisis
+                </button>
+            </form>
+        </div>
+
+    {% else %}
+
+        <div class="analysis-status">
+            <div class="status-icon">!</div>
+            <h3>Analisis Belum Berhasil</h3>
+            <p>{{ prediction.message }}</p>
+
+            <form
+                method="POST"
+                action="{{ url_for('run_analysis', analysis_id=analysis['id']) }}"
+            >
+                <button type="submit" class="btn-primary">
+                    Coba Analisis Kembali
+                </button>
+            </form>
+        </div>
+
+    {% endif %}
+
+</section>
+
+
+        <!-- FOTO ASLI DAN HASIL DETEKSI -->
+        
+        <!-- FOTO DAN HASIL ANALISIS TIGA SUDUT -->
+        <section class="result-grid">
+
+            <!-- FOTO DEPAN -->
+            <article class="result-card">
+
+                <h2>Foto Depan</h2>
+
+                <p class="eyebrow">ANALISIS UTAMA</p>
+
+                <h3>Foto Asli</h3>
+                <img
+                    class="uploaded-photo"
+                    src="{{ image_path }}"
+                    alt="Foto wajah tampak depan">
+
+                <h3>Visualisasi Deteksi</h3>
+
+                {% if prediction.status == "success" and prediction.annotated_image %}
+    <img
+        class="uploaded-photo"
+        src="{{ prediction.annotated_image }}"
+        alt="Deteksi lesi foto depan">
+{% elif prediction.status == "pending" %}
+    <p>Menunggu proses analisis.</p>
+{% else %}
+    <p>Visualisasi deteksi belum tersedia.</p>
+{% endif %}
+
+                <p class="privacy">
+                    Foto depan digunakan untuk klasifikasi severity utama
+                    CNN2, sedangkan CNN1 digunakan sebagai model pembanding.
+                </p>
+
+            </article>
+
+            <!-- FOTO KIRI -->
+            <article class="result-card">
+
+                <h2>Foto Sisi Kiri</h2>
+
+                <p class="eyebrow">ANALISIS TAMBAHAN</p>
+
+                {% if analysis["left_filename"] %}
+                    <h3>Foto Asli</h3>
+                    <img
+                        class="uploaded-photo"
+                        src="{{ url_for('static', filename='uploads/' ~ analysis['left_filename']) }}"
+                        alt="Foto wajah sisi kiri">
+                {% endif %}
+
+                {% set left_result = prediction.get("side_view_analysis", {}).get("left", {}) %}
+
+                <h3>Visualisasi Deteksi</h3>
+
+                {% if prediction.status == "success" and left_result.get("annotated_image") %}
+                    <img
+                        class="uploaded-photo"
+                        src="{{ left_result.get('annotated_image') }}"
+                        alt="Deteksi lesi foto sisi kiri">
+                {% else %}
+                    <p>{{ left_result.get("message", "Analisis foto kiri belum tersedia.") }}</p>
+                {% endif %}
+
+                {% if prediction.status == "success" %}
+    <p class="privacy">
+        Jumlah kandidat lesi:
+        {{ left_result.get("total_lesions", 0) }}
+    </p>
+{% endif %}
+
+            </article>
+
+            <!-- FOTO KANAN -->
+            <article class="result-card">
+
+                <h2>Foto Sisi Kanan</h2>
+
+                <p class="eyebrow">ANALISIS TAMBAHAN</p>
+
+                {% if analysis["right_filename"] %}
+                    <h3>Foto Asli</h3>
+                    <img
+                        class="uploaded-photo"
+                        src="{{ url_for('static', filename='uploads/' ~ analysis['right_filename']) }}"
+                        alt="Foto wajah sisi kanan">
+                {% endif %}
+
+                {% set right_result = prediction.get("side_view_analysis", {}).get("right", {}) %}
+
+                <h3>Visualisasi Deteksi</h3>
+
+                {% if prediction.status == "success" and right_result.get("annotated_image") %}
+                    <img
+                        class="uploaded-photo"
+                        src="{{ right_result.get('annotated_image') }}"
+                        alt="Deteksi lesi foto sisi kanan">
+                {% else %}
+                    <p>{{ right_result.get("message", "Analisis foto kanan belum tersedia.") }}</p>
+                {% endif %}
+
+               
+   {% if prediction.status == "success" %}
+    <p class="privacy">
+        Jumlah kandidat lesi:
+        {{ right_result.get("total_lesions", 0) }}
+    </p>
+{% endif %}
+
+
+            </article>
+
+        </section>
+
+
+        <!-- =================================
+             CNN 1 SEVERITY CLASSIFICATION
+        ================================== -->
+
+        
+<!-- CNN2 PRIMARY SEVERITY CLASSIFICATION -->
+
+<section class="result-card severity-card">
+
+    <p class="eyebrow">CNN2 PRIMARY SEVERITY CLASSIFICATION</p>
+
+    <h2>Hasil Klasifikasi Tingkat Keparahan</h2>
+
+    {% if prediction.severity %}
+
+        {% set severity = prediction.severity %}
+
+        {% if severity == "mild" %}
+            {% set severity_class = "mild" %}
+            {% set severity_label = "MILD" %}
+
+        {% elif severity == "moderate" %}
+            {% set severity_class = "moderate" %}
+            {% set severity_label = "MODERATE" %}
+
+        {% elif severity == "severe" %}
+            {% set severity_class = "severe" %}
+            {% set severity_label = "SEVERE" %}
+
+        {% elif severity == "very_severe" %}
+            {% set severity_class = "very-severe" %}
+            {% set severity_label = "VERY SEVERE" %}
+
+        {% else %}
+            {% set severity_class = "mild" %}
+            {% set severity_label = severity | upper %}
+        {% endif %}
+
+        <div class="severity-result">
+
+            <p class="severity-label">
+                TINGKAT KEPARAHAN JERAWAT
+            </p>
+
+            <div class="severity-value {{ severity_class }}">
+                {{ severity_label }}
+            </div>
+
+            <p class="severity-confidence">
+                Confidence CNN2:
+
+                <strong>
+                    {{ "%.2f"|format(
+                        prediction.severity_confidence | float
+                    ) }}%
+                </strong>
+            </p>
+
+        </div>
+
+        <div class="severity-description">
+
+            <strong>Interpretasi Hasil</strong>
+
+            <p>
+                {{ prediction.severity_description }}
+            </p>
+
+        </div>
+
+        <p class="severity-note">
+            Klasifikasi CNN2 dilakukan berdasarkan agregasi
+            probabilitas hasil klasifikasi setiap kandidat lesi
+            yang berhasil diproses. Confidence merupakan skor
+            prediksi model, bukan persentase tingkat keparahan klinis.
+        </p>
+
+    {% else %}
+
+        <div class="severity-error">
+
+            <strong>
+                Klasifikasi severity belum tersedia.
+            </strong>
+
+            <p>
+                CNN2 belum berhasil menghasilkan prediksi
+                tingkat keparahan dari kandidat lesi.
+            </p>
+
+            {% if prediction.severity_error %}
+                <p>
+                    {{ prediction.severity_error }}
+                </p>
+            {% endif %}
+
+        </div>
+
+    {% endif %}
+
+</section>
+
+
+        <!-- CONSISTENCY CHECK -->
+        {% if prediction.status == "success" %}
+        <section class="result-card">
+
+            <p class="eyebrow">MODEL CONSISTENCY ANALYSIS</p>
+
+            <h2>Pemeriksaan Konsistensi Model</h2>
+
+            {% set consistency = prediction.get("consistency_check", {}) %}
+
+            <div class="zone-list">
+
+                <div>
+                    <span>Prediksi CNN 1 (Whole Face)</span>
+                    <strong>
+                        {{ prediction.cnn1_severity | default("Tidak tersedia", true) | upper }}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Prediksi Dominan CNN 2 (Lesion)</span>
+                    <strong>
+                        {{ prediction.cnn2_dominant_lesion_class | default("Belum tersedia", true) | upper }}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Kandidat lesi dari YOLO</span>
+                    <strong>{{ prediction.total_lesions }}</strong>
+                </div>
+
+            </div>
+
+            <div class="severity-description">
+
+                <strong>Status Konsistensi</strong>
+
+                {% if consistency.get("status") == "consistent" %}
+
+                    <p class="status-approved">
+                        ✓ Hasil kedua jalur analisis konsisten.
+                    </p>
+
+                {% elif consistency.get("status") == "disagreement" %}
+
+                    <p class="status-warning">
+                        ⚠ Terdapat perbedaan hasil antara CNN 1 dan CNN 2.
+                    </p>
+
+                {% else %}
+
+                    <p class="status-warning">
+                        Data belum mencukupi untuk pemeriksaan konsistensi.
+                    </p>
+
+                {% endif %}
+
+                <p>
+                    {{ consistency.get(
+                        "message",
+                        "Pemeriksaan konsistensi belum tersedia."
+                    ) }}
+                </p>
+
+            </div>
+
+            <p class="severity-note">
+                Pemeriksaan ini membandingkan kelas dominan dari dua jalur
+                model. Hasilnya merupakan indikator konsistensi prediksi,
+                bukan diagnosis klinis atau validasi akurasi model.
+            </p>
+
+        </section>
+        {% endif %}
+
+
+        {% if prediction.status == "success" %}
+
+        <!-- TOTAL LESI -->
+        <section class="result-card">
+
+            <p class="eyebrow">DETECTION SUMMARY</p>
+
+            <h2>Ringkasan Hasil Deteksi</h2>
+
+            <div class="zone-list">
+
+                <div>
+                    <span>Total kandidat lesi terdeteksi</span>
+
+                    <strong>
+                        {{ prediction.total_lesions }}
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Status deteksi wajah</span>
+
+                    <strong>
+                        {% if prediction.face_detected %}
+                            Berhasil
+                        {% else %}
+                            Tidak terdeteksi
+                        {% endif %}
+                    </strong>
+                </div>
+
+            </div>
+
+            <p class="privacy">
+                Model:
+                <strong>{{ prediction.model_name }}</strong>
+            </p>
+
+        </section>
+
+        <!-- DISTRIBUSI ZONA WAJAH -->
+        <section class="result-card">
+
+            <p class="eyebrow">FACIAL ZONE MAPPING</p>
+
+            <h2>Distribusi Lesi Berdasarkan Zona Wajah</h2>
+
+            <div class="zone-list">
+
+                {% for zone, count in prediction.counts_by_zone.items() %}
+
+                    <div>
+
+                        <span>
+                            {% if zone == "dahi" %}
+                                Dahi
+                            {% elif zone == "pipi_kiri" %}
+                                Pipi kiri
+                            {% elif zone == "pipi_kanan" %}
+                                Pipi kanan
+                            {% elif zone == "hidung" %}
+                                Hidung
+                            {% elif zone == "dagu" %}
+                                Dagu
+                            {% elif zone == "area_mulut" %}
+                                Area mulut
+                            {% elif zone == "tidak_terpetakan" %}
+                                Tidak terpetakan
+                            {% else %}
+                                {{ zone }}
+                            {% endif %}
+                        </span>
+
+                        <strong>{{ count }}</strong>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        </section>
+
+        <!-- =================================
+             DETAIL CNN 2 PER LESI
+        ================================== -->
+
+        <section class="result-card">
+
+            <p class="eyebrow">CNN 2 LESION CLASSIFICATION</p>
+
+            <h2>Detail Klasifikasi Setiap Lesi</h2>
+
+            <p class="description">
+                CNN 2 mengklasifikasikan tingkat keparahan
+                dari setiap potongan lesi yang dihasilkan
+                oleh bounding box YOLO.
+            </p>
+
+            {% if prediction.detections %}
+
+                {% for detection in prediction.detections %}
+
+                    {% set lesion = detection.get("lesion_severity") %}
+
+                    <div class="lesion-detail-card">
+
+                        <div class="lesion-detail-header">
+
+                            <strong>
+                                Lesi {{ loop.index }} —
+                                {{ detection.zone_name.replace("_", " ") | title }}
+                            </strong>
+
+                            {% if lesion == "mild" %}
+
+                                <span class="severity-badge mild">
+                                    MILD
+                                </span>
+
+                            {% elif lesion == "moderate" %}
+
+                                <span class="severity-badge moderate">
+                                    MODERATE
+                                </span>
+
+                            {% elif lesion == "severe" %}
+
+                                <span class="severity-badge severe">
+                                    SEVERE
+                                </span>
+
+                            {% elif lesion == "very_severe" %}
+
+                                <span class="severity-badge very-severe">
+                                    VERY SEVERE
+                                </span>
+
+                            {% else %}
+
+                                <span class="severity-badge unavailable">
+                                    BELUM TERSEDIA
+                                </span>
+
+                            {% endif %}
+
+                        </div>
+
+                        <div class="lesion-metrics">
+
+                            <div>
+
+                                <span>
+                                    YOLO Detection Confidence
+                                </span>
+
+                                <strong>
+                                    {{ "%.2f"|format(
+                                        detection.confidence | float * 100
+                                    ) }}%
+                                </strong>
+
+                            </div>
+
+                            <div>
+
+                                <span>
+                                    CNN 2 Classification Confidence
+                                </span>
+
+                                <strong>
+
+                                    {% if detection.get("lesion_severity_confidence") is not none %}
+
+                                        {{ "%.2f"|format(
+                                            detection.lesion_severity_confidence | float
+                                        ) }}%
+
+                                    {% else %}
+
+                                        -
+
+                                    {% endif %}
+
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+            {% else %}
+
+                <p>
+                    Tidak ditemukan kandidat lesi pada foto.
+                </p>
+
+            {% endif %}
+
+            <p class="lesion-note">
+                YOLO bertugas mendeteksi kandidat lesi,
+                sedangkan CNN 2 mengklasifikasikan kategori
+                setiap crop lesi. Confidence merupakan skor
+                prediksi model dan bukan persentase tingkat
+                keparahan klinis.
+            </p>
+
+        </section>
+
+        {% endif %}
+
+        <!-- EDUKASI -->
+        <section class="result-card education-card">
+
+            <p class="eyebrow">NEXT STEP</p>
+
+            <h2>Pelajari Kandungan Skincare</h2>
+
+            <p>
+                Kenali kandungan skincare yang umum digunakan
+                untuk membantu merawat kulit berjerawat,
+                manfaatnya, dan hal yang perlu diperhatikan
+                saat menggunakannya.
+            </p>
+
+            <a class="primary-link"
+               href="{{ url_for('recommendations', analysis_id=analysis['id']) }}">
+                Lihat Edukasi Skincare →
+            </a>
+
+        </section>
+
+        <!-- DISCLAIMER -->
+        <section class="result-card">
+
+            <h3>Catatan Hasil Analisis</h3>
+
+            <p class="privacy">
+                Hasil deteksi merupakan prediksi berbasis AI.
+                Setiap bounding box menunjukkan kandidat lesi
+                dan belum tentu seluruhnya merupakan jerawat
+                yang terkonfirmasi.
+
+                CNN1 merupakan model pembanding yang menghasilkan
+                prediksi eksperimental berdasarkan gambar seluruh wajah.
+                CNN2 menjadi model utama untuk menentukan severity akhir
+                berdasarkan agregasi hasil klasifikasi setiap lesi.
+
+                CNN 2 menghasilkan klasifikasi eksperimental
+                berdasarkan crop setiap kandidat lesi.
+
+                Kedua model belum merupakan alat diagnosis
+                klinis yang tervalidasi.
+
+                Hasil ini bersifat edukatif dan bukan pengganti
+                diagnosis dokter kulit.
+            </p>
+
+        </section>
+
+        <div class="center-action">
+
+            <a class="secondary-link" href="/">
+                ← Analisis Foto Lain
+            </a>
+
+        </div>
+
+    </main>
+
+    <footer>
+        <p>AcneMap AI · Educational skin analysis</p>
+        <p>Bukan pengganti diagnosis dokter kulit.</p>
+    </footer>
+
+</body>
+</html>

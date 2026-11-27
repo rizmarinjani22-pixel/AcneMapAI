@@ -1,0 +1,25 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+.venv/
+venv/
+
+# Backup files
+*.backup
+*.bak
+
+# Local database
+acnemap.db
+
+# Generated outputs
+outputs/
+
+# Environment secrets
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/

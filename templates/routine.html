@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Rutinitas Skincare | AcneMap AI</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="app-body">
+    {% include "_sidebar.html" %}
+
+    <main class="results-page">
+        <p class="eyebrow">YOUR DAILY SKINCARE</p>
+        <h1>Rutinitas sederhana untuk <span>kulitmu.</span></h1>
+        <p class="description">
+            Panduan dasar perawatan kulit yang dapat disesuaikan
+            dengan kebutuhan dan toleransi kulit masing-masing.
+        </p>
+
+        <section class="routine-grid">
+            <article class="routine-card">
+                <div class="routine-icon">☀</div>
+                <h2>Rutinitas Pagi</h2>
+                <ol>
+                    <li>
+                        <strong>Pembersih wajah</strong>
+                        <p>Gunakan pembersih lembut sesuai kondisi kulit.</p>
+                    </li>
+                    <li>
+                        <strong>Pelembap</strong>
+                        <p>Bantu menjaga kelembapan dan pelindung kulit.</p>
+                    </li>
+                    <li>
+                        <strong>Sunscreen</strong>
+                        <p>Gunakan SPF 30 atau lebih dan ulangi pemakaian
+                           sesuai petunjuk serta aktivitas.</p>
+                    </li>
+                </ol>
+            </article>
+
+            <article class="routine-card">
+                <div class="routine-icon">☾</div>
+                <h2>Rutinitas Malam</h2>
+                <ol>
+                    <li>
+                        <strong>Pembersih wajah</strong>
+                        <p>Bersihkan sunscreen, kotoran, dan sisa produk.</p>
+                    </li>
+                    <li>
+                        <strong>Bahan aktif (opsional)</strong>
+                        <p>Pilih sesuai kebutuhan dan petunjuk produk.
+                           Mulai satu bahan aktif terlebih dahulu.</p>
+                    </li>
+                    <li>
+                        <strong>Pelembap</strong>
+                        <p>Gunakan pelembap untuk membantu mengurangi
+                           kulit kering.</p>
+                    </li>
+                </ol>
+            </article>
+        </section>
+
+        <section class="result-card education-card">
+            <p class="eyebrow">SKINCARE REMINDERS</p>
+            <h2>Hal yang perlu diingat</h2>
+            <ul class="routine-tips">
+                <li>Hindari memulai banyak bahan aktif sekaligus.</li>
+                <li>Hentikan produk yang menimbulkan iritasi berat.</li>
+                <li>Periksa petunjuk penggunaan dan peringatan produk.</li>
+                <li>Konsultasikan dengan dokter jika jerawat berat,
+                    nyeri, atau meninggalkan jaringan parut.</li>
+            </ul>
+        </section>
+
+        <p class="privacy">
+            Informasi ini bersifat edukasi umum, bukan resep medis personal.
+        </p>
+    </main>
+
+    <footer>
+        <p>AcneMap AI · Educational skin analysis</p>
+        <p>Bukan pengganti diagnosis dokter kulit.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,10 @@
+# Initial Python 3.10 deployment dependencies.
+# torch and torchvision are installed as CPU-only wheels in Dockerfile.
+Flask==3.0.3
+gunicorn==23.0.0
+numpy==1.26.4
+Pillow==10.4.0
+opencv-python-headless==4.10.0.84
+mediapipe==0.10.21
+ultralytics==8.3.0
+protobuf==4.25.5

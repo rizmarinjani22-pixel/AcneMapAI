@@ -1,0 +1,20 @@
+.git
+.venv
+venv
+__pycache__
+**/__pycache__
+*.py[cod]
+*.log
+.env
+.env.*
+.pytest_cache
+.mypy_cache
+.ipynb_checkpoints
+external_test/
+outputs/
+tests/
+*.backup
+*.bak
+model_cnn2/acnemap_mobilenetv2_best.pth
+
+# Keep cnn_model for now: active predictor.py was previously seen referencing CNN1.
